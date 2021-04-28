@@ -4,40 +4,36 @@
 namespace App\Http\Actions;
 
 
+use App\Http\Resources\AeonResource;
 use App\Services\AEON\AeonService;
 use Illuminate\Support\Facades\Log;
 
 class CreateAirtimeAction
 {
+    protected $sessionId;
 
     public function execute()
     {
-        /*$aeon = new AeonService();
+        $aeon = new AeonService();
         $aeon->write($this->authenticationRequest());
-        $response = $aeon->get();
-        return $response;*/
-
-        $sock=socket_create(AF_INET,SOCK_STREAM,0) or die("Cannot create a socket");
-        socket_connect($sock,'102.134.128.70','7800') or die("Could not connect to the socket");
-        socket_write($sock, 'kjkjkjk');
-        Log::info('After Write');
-        $read=socket_read($sock,1024);
-        Log::info($read);
-        echo $read;
-        socket_close($sock);
+        $result = $aeon->get();
+        // Find session id field
+        preg_match('/<SessionId>(.*)<\/SessionId>/', $result, $this->sessionId);
+        Log::info($this->voucherListRequest());
+        $aeon->write($this->voucherListRequest());
+        $result2 = $aeon->get();
+        $xmlResponse = simplexml_load_string($result2);
+        $response = json_decode(json_encode($xmlResponse, JSON_PRETTY_PRINT), 1);
+        return new AeonResource($response);
     }
 
-    private function authenticationRequest()
+    private function authenticationRequest(): string
     {
-        return '<request>
-                <EventType>Authentication<</EventType>
-                <event>
-                 <UserPin>' . config('services.aeon.user_pin') . '</UserPin>
-                <DeviceId>' . config('services.aeon.dev_id') . '</DeviceId>
-                <DeviceSer>' . config('services.aeon.dev_ser') . '</DeviceSer>
-                <TransType>AccountInfo</TransType>
-                <Reference>' . 123459 . '</Reference>
-                </event>
-                </request>';
+        return '<request><EventType>Authentication</EventType><event><UserPin>' . config('services.aeon.user_pin') . '</UserPin><DeviceId>' . config('services.aeon.dev_id') . '</DeviceId><DeviceSer>' . config('services.aeon.dev_ser') . '</DeviceSer><TransType>Vodacom</TransType></event></request>' . PHP_EOL;
+    }
+
+    private function voucherListRequest(): string
+    {
+        return '<request><sessionId>' . $this->sessionId[0] . '</sessionId><EventType>MNOValidation</EventType><event><Reference>abcd1234</Reference><PhoneNumber>0820012345</PhoneNumber><Amount>20.0</Amount><ProductCode>0</ProductCode></event></request>' . PHP_EOL;
     }
 }

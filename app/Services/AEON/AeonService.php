@@ -42,9 +42,9 @@ class AeonService
      * Gets the results of the socket
      */
     public function get()
-    {;
+    {
+        //dd(fgets(static::$socket, 1024));
         while ($buffer = fgets(static::$socket, 1024)) {
-
             $response = isset($response) ? $response . $buffer : $buffer;
             if (preg_match('/<\/response>/', $buffer)) {
                 break;

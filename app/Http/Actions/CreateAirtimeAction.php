@@ -20,7 +20,7 @@ class CreateAirtimeAction
         $request = new \Illuminate\Http\Request([
             'productCode' => 1459,
             'transType' => 'MTNBundles',
-            'phoneNumber' => '9830012301'
+            'phoneNumber' => '983001200001'
         ]);
         $this->reference = Str::random(16);
         $this->request = $request;

@@ -4,11 +4,13 @@
 namespace App\Services\AEON;
 
 
+use App\Traits\HasResponse;
 use Exception;
 use Illuminate\Support\Facades\Log;
 
 class AeonService
 {
+    use HasResponse;
     /**
      * Holds the open socket connection
      */
@@ -21,7 +23,7 @@ class AeonService
     {
         // Connect
         if (!static::$socket = pfsockopen(config('services.aeon.ip_address'), config('services.aeon.port'), $errno, $errstr)) {
-            throw new Exception("Unable to connect to " . config('services.aeon.ip_address') . ' on port ' . config('services.aeon.port'));
+            return $this->serverErrorResponse("Unable to connect to " . config('services.aeon.ip_address') . ' on port ' . config('services.aeon.port'));
         }
 
         // FuelPHP logger
@@ -66,14 +68,14 @@ class AeonService
                     preg_match('/<ErrorText>(.*)<\/ErrorText>/', $response, $errorText);
 
                     // Throw exception
-                    throw new \Exception('Error code ' . $errorCode[1] . ': ' . $errorText[1]);
+                    return $this->failedResponse($errorText[1]);
                 }
 
             }
 
             return $response;
         } else {
-            throw new \Exception('No data returned from server');
+            return $this->serverErrorResponse('No data returned from server');
         }
     }
 
